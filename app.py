@@ -5,6 +5,14 @@ import os
 # 1. Postavke stranice
 st.set_page_config(page_title="JournalX Panel", page_icon="📝", layout="wide")
 
+# PRIVREMENI RESET: Brišemo staru pokvarenu bazu ako postoji na serveru
+if os.path.exists("journalx.db") and "baza_resetovana" not in st.session_state:
+    try:
+        os.remove("journalx.db")
+        st.session_state.baza_resetovana = True
+    except:
+        pass
+
 # 2. Inicijalizacija SQLite baze podataka (Korisnici + Programi)
 def inicijaliziraj_bazu():
     conn = sqlite3.connect("journalx.db")
@@ -126,7 +134,7 @@ def login_i_registracija():
         if st.button("Prijavi se", use_container_width=True):
             rezultat = provjeri_korisnika(username, password)
             if rezultat:
-                uloga, status = rezultat
+                uloga, status = resultado = rezultat
                 if status == "Blokiran":
                     st.error("Vaš račun je blokiran od strane administratora!")
                 else:
@@ -146,7 +154,6 @@ def login_i_registracija():
         
         if st.button("Registriraj se", use_container_width=True):
             if novi_user and novi_email and nova_sifra:
-                # Svi novi su na čekanju dok ih Bog/Mod ne odobre
                 uspjeh = dodaj_korisnika(novi_user, nova_sifra, novi_email, "Customer", "Na čekanju")
                 if uspjeh:
                     st.success("🚀 Registracija uspješna! Vaš račun je na čekanju dok ga Bog ili Mod ne odobre.")
@@ -204,7 +211,6 @@ else:
                 for k in korisnici_lista:
                     k_id, k_user, k_email, k_uloga, k_status = k
                     
-                    # Kreiranje reda za svakog korisnika sa kontrolama
                     col_detalji, col_akcija_status, col_akcija_uloga = st.columns(3)
                     
                     with col_detalji:
@@ -212,7 +218,6 @@ else:
                         st.caption(f"Trenutni Rang: {k_uloga} | Status: {k_status}")
                     
                     with col_akcija_status:
-                        # Promjena statusa (Aktiviraj / Blokiraj)
                         if k_status == "Na čekanju" or k_status == "Blokiran":
                             if st.button("✅ Odobri", key=f"act_{k_id}"):
                                 azuriraj_status_korisnika(k_id, "Aktivan")
@@ -225,7 +230,6 @@ else:
                                 st.rerun()
                                 
                     with col_akcija_uloga:
-                        # Promjena uloge (Promijeni u Mod / Customer)
                         if k_uloga == "Customer":
                             if st.button("🛡️ Unaprijedi u Mod", key=f"mod_{k_id}"):
                                 azuriraj_ulogu_korisnika(k_id, "Mod")
@@ -294,7 +298,6 @@ else:
     elif st.session_state.uloga == "Customer":
         st.title("🚀 Vaš Korisnički Panel")
         
-        # Provjera da li je korisnik u međuvremenu odobren
         if trenutni_status == "Na čekanju":
             st.warning("🔒 Vaš račun je uspješno kreiran, ali trenutno ima status **'Na čekanju'**.")
             st.info("Molimo sačekajte da vlasnik (Bog) ili Moderator odobre Vaš pristup kako biste mogli preuzeti programe.")
