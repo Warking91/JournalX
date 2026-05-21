@@ -5,48 +5,28 @@ import os
 # 1. Postavke stranice
 st.set_page_config(page_title="JournalX Panel", page_icon="📝", layout="wide")
 
-# --- NOVI COOL LOGO NA SREDINI EKRENA ---
-st.markdown("""
-    <style>
-        .logo-kontejner {
-            text-align: center;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .logo-tekst {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 55px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            color: #1E3A8A; /* Moderna tamnoplava boja */
-            text-transform: uppercase;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-        .logo-x {
-            color: #DC2626; /* Jaka crvena boja za X */
-            font-size: 65px;
-            font-style: italic;
-            text-shadow: 3px 3px 6px rgba(220, 38, 38, 0.3);
-        }
-        .podnaslov {
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 14px;
-            color: #6B7280;
-            letter-spacing: 5px;
-            text-transform: uppercase;
-            margin-top: -15px;
-        }
-    </style>
-    <div class="logo-kontejner">
-        <div class="logo-tekst">Journal<span class="logo-x">X</span></div>
-        <div class="podnaslov">Aplikacijski Centar</div>
-    </div>
-""", unsafe_html=True)
+# --- NOVI COOL LOGO PRILAGOĐEN ZA PYTHON 3.14 ---
+logo_html = (
+    "<style>"
+    ".logo-kontejner { text-align: center; padding: 20px; margin-bottom: 20px; }"
+    ".logo-tekst { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; "
+    "font-size: 55px; font-weight: 800; letter-spacing: 2px; color: #1E3A8A; "
+    "text-transform: uppercase; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }"
+    ".logo-x { color: #DC2626; font-size: 65px; font-style: italic; "
+    "text-shadow: 3px 3px 6px rgba(220, 38, 38, 0.3); }"
+    ".podnaslov { font-family: 'Segoe UI', sans-serif; font-size: 14px; "
+    "color: #6B7280; letter-spacing: 5px; text-transform: uppercase; margin-top: -15px; }"
+    "</style>"
+    "<div class='logo-kontejner'>"
+    "<div class='logo-tekst'>Journal<span class='logo-x'>X</span></div>"
+    "<div class='podnaslov'>Aplikacijski Centar</div>"
+    "</div>"
+)
+st.markdown(logo_html, unsafe_html=True)
 
 
-# 2. Inicijalizacija potpuno NOVE SQLite baze podataka (v2) koja rješava problem prijave
+# 2. Inicijalizacija SQLite baze podataka (v2)
 def inicijaliziraj_bazu():
-    # Koristimo potpuno novo ime baze kako bismo zaobišli stari pokvareni fajl na serveru
     conn = sqlite3.connect("journalx_v2.db")
     c = conn.cursor()
     
@@ -269,7 +249,7 @@ else:
                             if st.button("👤 Smanji u Korisnika", key=f"cust_{k_id}"):
                                 azuriraj_ulogu_korisnika(k_id, "Customer")
                                 st.info(f"{k_user} vraćen na Customer rang.")
-                                'st.rerun()'
+                                st.rerun()
                     st.markdown("---")
                     
         with tab3:
