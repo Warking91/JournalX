@@ -5,17 +5,49 @@ import os
 # 1. Postavke stranice
 st.set_page_config(page_title="JournalX Panel", page_icon="📝", layout="wide")
 
-# PRIVREMENI RESET: Brišemo staru pokvarenu bazu ako postoji na serveru
-if os.path.exists("journalx.db") and "baza_resetovana" not in st.session_state:
-    try:
-        os.remove("journalx.db")
-        st.session_state.baza_resetovana = True
-    except:
-        pass
+# --- NOVI COOL LOGO NA SREDINI EKRENA ---
+st.markdown("""
+    <style>
+        .logo-kontejner {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .logo-tekst {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 55px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #1E3A8A; /* Moderna tamnoplava boja */
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .logo-x {
+            color: #DC2626; /* Jaka crvena boja za X */
+            font-size: 65px;
+            font-style: italic;
+            text-shadow: 3px 3px 6px rgba(220, 38, 38, 0.3);
+        }
+        .podnaslov {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 14px;
+            color: #6B7280;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            margin-top: -15px;
+        }
+    </style>
+    <div class="logo-kontejner">
+        <div class="logo-tekst">Journal<span class="logo-x">X</span></div>
+        <div class="podnaslov">Aplikacijski Centar</div>
+    </div>
+""", unsafe_html=True)
 
-# 2. Inicijalizacija SQLite baze podataka (Korisnici + Programi)
+
+# 2. Inicijalizacija potpuno NOVE SQLite baze podataka (v2) koja rješava problem prijave
 def inicijaliziraj_bazu():
-    conn = sqlite3.connect("journalx.db")
+    # Koristimo potpuno novo ime baze kako bismo zaobišli stari pokvareni fajl na serveru
+    conn = sqlite3.connect("journalx_v2.db")
     c = conn.cursor()
     
     # Kreiranje tablice za korisnike
@@ -40,7 +72,7 @@ def inicijaliziraj_bazu():
         )
     ''')
     
-    # Unos zadanih računa ako je baza prazna
+    # Unos zadanih računa
     c.execute("SELECT COUNT(*) FROM korisnici")
     if c.fetchone() == 0:
         c.execute("INSERT INTO korisnici (username, password, email, uloga, status) VALUES ('bog', 'bog123', 'bog@journalx.com', 'Bog', 'Aktivan')")
@@ -57,7 +89,7 @@ inicijaliziraj_bazu()
 
 # --- POMOĆNE FUNKCIJE ZA KORISNIKE ---
 def provjeri_korisnika(username, password):
-    conn = sqlite3.connect("journalx.db")
+    conn = sqlite3.connect("journalx_v2.db")
     c = conn.cursor()
     c.execute("SELECT uloga, status FROM korisnici WHERE username=? AND password=?", (username, password))
     res = c.fetchone()
@@ -65,7 +97,7 @@ def provjeri_korisnika(username, password):
     return res if res else None
 
 def dohvati_sve_korisnike():
-    conn = sqlite3.connect("journalx.db")
+    conn = sqlite3.connect("journalx_v2.db")
     c = conn.cursor()
     c.execute("SELECT id, username, email, uloga, status FROM korisnici WHERE uloga != 'Bog'")
     res = c.fetchall()
@@ -74,7 +106,7 @@ def dohvati_sve_korisnike():
 
 def dodaj_korisnika(username, password, email, uloga, status):
     try:
-        conn = sqlite3.connect("journalx.db")
+        conn = sqlite3.connect("journalx_v2.db")
         c = conn.cursor()
         c.execute("INSERT INTO korisnici (username, password, email, uloga, status) VALUES (?, ?, ?, ?, ?)", 
                   (username, password, email, uloga, status))
@@ -85,14 +117,14 @@ def dodaj_korisnika(username, password, email, uloga, status):
         return False
 
 def azuriraj_status_korisnika(korisnik_id, novi_status):
-    conn = sqlite3.connect("journalx.db")
+    conn = sqlite3.connect("journalx_v2.db")
     c = conn.cursor()
     c.execute("UPDATE korisnici SET status=? WHERE id=?", (novi_status, korisnik_id))
     conn.commit()
     conn.close()
 
 def azuriraj_ulogu_korisnika(korisnik_id, nova_uloga):
-    conn = sqlite3.connect("journalx.db")
+    conn = sqlite3.connect("journalx_v2.db")
     c = conn.cursor()
     c.execute("UPDATE korisnici SET uloga=? WHERE id=?", (nova_uloga, korisnik_id))
     conn.commit()
@@ -100,14 +132,14 @@ def azuriraj_ulogu_korisnika(korisnik_id, nova_uloga):
 
 # --- POMOĆNE FUNKCIJE ZA PROGRAME ---
 def dodaj_program(ime, opis, link):
-    conn = sqlite3.connect("journalx.db")
+    conn = sqlite3.connect("journalx_v2.db")
     c = conn.cursor()
     c.execute("INSERT INTO programi (ime, opis, link) VALUES (?, ?, ?)", (ime, opis, link))
     conn.commit()
     conn.close()
 
 def dohvati_sve_programe():
-    conn = sqlite3.connect("journalx.db")
+    conn = sqlite3.connect("journalx_v2.db")
     c = conn.cursor()
     c.execute("SELECT id, ime, opis, link FROM programi ORDER BY id DESC")
     res = c.fetchall()
@@ -115,7 +147,7 @@ def dohvati_sve_programe():
     return res
 
 def obrisi_program(program_id):
-    conn = sqlite3.connect("journalx.db")
+    conn = sqlite3.connect("journalx_v2.db")
     c = conn.cursor()
     c.execute("DELETE FROM programi WHERE id=?", (program_id,))
     conn.commit()
@@ -124,7 +156,6 @@ def obrisi_program(program_id):
 
 # 3. Login i Registracija Forma
 def login_i_registracija():
-    st.subheader("🔒 Pristup JournalX Panelu")
     izbor = st.radio("Odaberite akciju", ["Prijava", "Registracija"], horizontal=True)
     
     if izbor == "Prijava":
@@ -134,7 +165,7 @@ def login_i_registracija():
         if st.button("Prijavi se", use_container_width=True):
             rezultat = provjeri_korisnika(username, password)
             if rezultat:
-                uloga, status = resultado = rezultat
+                uloga, status = rezultat
                 if status == "Blokiran":
                     st.error("Vaš račun je blokiran od strane administratora!")
                 else:
@@ -168,12 +199,12 @@ if "prijavljen" not in st.session_state:
     login_i_registracija()
 else:
     # Sidebar za navigaciju
-    st.sidebar.title("JournalX Medij")
+    st.sidebar.title("💥 JournalX")
     st.sidebar.write(f"Korisnik: **{st.session_state.korisnik}**")
     st.sidebar.write(f"Rang: **{st.session_state.uloga}**")
     
-    # Ponovno dohvaćanje statusa iz baze za trenutnog korisnika radi sigurnosti
-    conn = sqlite3.connect("journalx.db")
+    # Ponovno dohvaćanje statusa iz baze za trenutnog korisnika
+    conn = sqlite3.connect("journalx_v2.db")
     c = conn.cursor()
     c.execute("SELECT status FROM korisnici WHERE username=?", (st.session_state.korisnik,))
     trenutni_status_db = c.fetchone()
@@ -210,7 +241,6 @@ else:
             else:
                 for k in korisnici_lista:
                     k_id, k_user, k_email, k_uloga, k_status = k
-                    
                     col_detalji, col_akcija_status, col_akcija_uloga = st.columns(3)
                     
                     with col_detalji:
@@ -221,12 +251,12 @@ else:
                         if k_status == "Na čekanju" or k_status == "Blokiran":
                             if st.button("✅ Odobri", key=f"act_{k_id}"):
                                 azuriraj_status_korisnika(k_id, "Aktivan")
-                                st.success(f"{k_user} je sada Aktivan!")
+                                st.success(f"{k_user} odobren!")
                                 st.rerun()
                         if k_status == "Aktivan":
                             if st.button("🚫 Blokiraj", key=f"block_{k_id}"):
                                 azuriraj_status_korisnika(k_id, "Blokiran")
-                                st.error(f"{k_user} je blokiran!")
+                                st.error(f"{k_user} blokiran!")
                                 st.rerun()
                                 
                     with col_akcija_uloga:
@@ -238,8 +268,8 @@ else:
                         if k_uloga == "Mod":
                             if st.button("👤 Smanji u Korisnika", key=f"cust_{k_id}"):
                                 azuriraj_ulogu_korisnika(k_id, "Customer")
-                                st.info(f"{k_user} je vraćen na Customer rang.")
-                                st.rerun()
+                                st.info(f"{k_user} vraćen na Customer rang.")
+                                'st.rerun()'
                     st.markdown("---")
                     
         with tab3:
