@@ -22,7 +22,7 @@ logo_html = (
     "<div class='podnaslov'>Aplikacijski Centar</div>"
     "</div>"
 )
-st.markdown(logo_html, unsafe_html=True)
+st.markdown(logo_html, unsafe_allow_html=True)
 
 
 # 2. Inicijalizacija SQLite baze podataka (v2)
@@ -324,4 +324,4 @@ else:
                     with st.expander(f"📦 {ime}", expanded=True):
                         st.write(opis if opis else "Nema opisa za ovaj program.")
                         st.link_button(f"Preuzmi {ime}", link, use_container_width=True)
-                        st.write("") 
+                        st.write("")
