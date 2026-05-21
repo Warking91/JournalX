@@ -79,7 +79,7 @@ def dodaj_korisnika(username, password, email, uloga, status):
 def azuriraj_status_korisnika(korisnik_id, novi_status):
     conn = sqlite3.connect("journalx.db")
     c = conn.cursor()
-    c.execute("UPDATE korisnici WHERE id=?", (novi_status, korisnik_id))
+    c.execute("UPDATE korisnici SET status=? WHERE id=?", (novi_status, korisnik_id))
     conn.commit()
     conn.close()
 
@@ -169,9 +169,10 @@ else:
     conn = sqlite3.connect("journalx.db")
     c = conn.cursor()
     c.execute("SELECT status FROM korisnici WHERE username=?", (st.session_state.korisnik,))
-    trenutni_status = c.fetchone()[0]
+    trenutni_status_db = c.fetchone()
     conn.close()
     
+    trenutni_status = trenutni_status_db[0] if trenutni_status_db else "Na čekanju"
     st.sidebar.write(f"Status računa: **{trenutni_status}**")
     
     if st.sidebar.button("Odjavi se", use_container_width=True):
@@ -204,7 +205,7 @@ else:
                     k_id, k_user, k_email, k_uloga, k_status = k
                     
                     # Kreiranje reda za svakog korisnika sa kontrolama
-                    col_detalji, col_akcija_status, col_akcija_uloga = st.columns([2, 1, 1])
+                    col_detalji, col_akcija_status, col_akcija_uloga = st.columns(3)
                     
                     with col_detalji:
                         st.markdown(f"👤 **{k_user}** ({k_email})")
@@ -255,7 +256,7 @@ else:
             
             for p in trenutni_programi:
                 p_id, p_ime, p_opis, p_link = p
-                col_info, col_btn = st.columns([3, 1])
+                col_info, col_btn = st.columns(2)
                 with col_info:
                     st.markdown(f"**{p_ime}**")
                     st.caption(f"Opis: {p_opis} | Link: {p_link}")
@@ -279,7 +280,7 @@ else:
             st.subheader("📌 Korisnici koji čekaju odobrenje:")
             for k in na_cekanju:
                 k_id, k_user, k_email, _, k_status = k
-                col_m_detalji, col_m_btn = st.columns([3, 1])
+                col_m_detalji, col_m_btn = st.columns(2)
                 with col_m_detalji:
                     st.write(f"👤 **{k_user}** | Email: {k_email}")
                 with col_m_btn:
